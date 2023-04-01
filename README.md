@@ -2,12 +2,6 @@
 
 ## User Story
 
-
-
-
-
-
-
 ## Credits
 I followed a great tutorial guide listed below  
 

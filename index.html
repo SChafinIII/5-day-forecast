@@ -1,12 +1,133 @@
-<link rel="stylesheet" type="text/css" href="css.css" />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Weather Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/css/bootstrap.min.css"
+    rel="stylesheet" integrity="sha384-aFq/bzH65dt+w6FI2ooMVUpc+21e0SRygnTpmBvdBgSdnuTN7QbdgL+OapgHtvPp"
+    crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"
+    integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-qKXV1j0HvMUeCBQ+QVp7JcfGl760yU08IQ+GpUo5hlbpg51QRiuqHAJz8+BrxE/N"
+    crossorigin="anonymous"></script>
+  <script src="
+https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js
+"></script>
 
-<div class="component__weather-box">
-    <div class="component__weather-content">
-      <div class="weather-content__overview"></div>
-      <div class="weather-content__temp"></div>
+</head>
+
+<body>
+    <div class="container">
+      <h1 class="text-center mb-4">Weather Dashboard</h1>
+      <form id="search-form">
+        <div class="input-group mb-3">
+          <label for="cityInput" class="form-label visually-hidden">City</label>
+          <input type="text" class="form-control" id="cityInput" placeholder="Enter city name">
+          <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+      </form>
     </div>
-    <div class="component__forecast-box"></div>
-  </div>
 
-  <script src="javascript.js"></script>
+      <script>
+        // add event listener to search form
+        $("#search-form").on("submit", function (event) {
+          event.preventDefault();
+          var city = $("#cityInput").val().trim();
+          getWeatherData(city);
+        });
+      </script>
+    </form>
+    <div class="container py-5">
+      <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+          <h2 id="cityName"></h2>
+          <h3 id="date"></h3>
+          <img id="weatherIcon" src="" alt="">
+          <p id="temperature"></p>
+          <p id="humidity"></p>
+          <p id="windSpeed"></p>
+        </div>
+      </div>
+      <div class="row mt-5" id="forecast">
+      </div>
+    </div>
+    
 
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"
+    integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-qKXV1j0HvMUeCBQ+QVp7JcfGl760yU08IQ+GpUo5hlbpg51QRiuqHAJz8+BrxE/N"
+    crossorigin="anonymous"></script>
+  <script>
+    function clearWeatherData() {
+      $("#cityName").empty();
+      $("#date").empty();
+      $("#weatherIcon").attr("src", "");
+      $("#temperature").empty();
+      $("#humidity").empty();
+      $("#windSpeed").empty();
+      $("#forecast").empty();
+    }
+
+    function getWeatherData(city) {
+      var apiKey = "a46f620b13de87d18e201a524058a87f";
+      var queryURL = "https://api.openweathermap.org/data/2.5/weather?q=" + city + "&units=imperial&appid=" + apiKey;
+
+      $.ajax({
+        url: queryURL,
+        method: "GET",
+      }).then(function (response) {
+        // display current weather data
+        $("#cityName").text(response.name);
+        $("#date").text(moment().format("MMMM Do YYYY, h:mm:ss a"));
+        $("#weatherIcon").attr("src", "https://openweathermap.org/img/w/" + response.weather[0].icon + ".png");
+        $("#temperature").text(response.main.temp + " °F");
+        $("#humidity").text(response.main.humidity + "%");
+        $("#windSpeed").text(response.wind.speed + " MPH");
+
+        // display 5-day forecast
+        var fiveDayQueryURL = "https://api.openweathermap.org/data/2.5/forecast?q=" + city + "&units=imperial&appid=" + apiKey;
+
+        $.ajax({
+          url: fiveDayQueryURL,
+          method: "GET",
+        }).then(function (response) {
+          // clear previous forecast data
+          $("#forecast").empty();
+
+          // display 5-day forecast data
+          for (var i = 0; i < response.list.length; i += 8) {
+            var forecastData = response.list[i];
+            var forecastDate = moment(forecastData.dt_txt).format("M/D/YYYY");
+            var forecastIconURL = "https://openweathermap.org/img/w/" + forecastData.weather[0].icon + ".png";
+            var forecastTemp = forecastData.main.temp;
+            var forecastHumidity = forecastData.main.humidity;
+            var forecastWindSpeed = forecastData.wind.speed;
+
+            var forecastCard = $("<div>").addClass("col card mx-2 mb-3 p-2");
+            var forecastDateEl = $("<h5>").addClass("card-title").text(forecastDate);
+            var forecastIconEl = $("<img>").attr("src", forecastIconURL);
+            var forecastTempEl = $("<p>").addClass("card-text").text("Temperature: " + forecastTemp + " °F");
+            var forecastHumidityEl = $("<p>").addClass("card-text").text("Humidity: " + forecastHumidity + "%");
+            var forecastWindSpeedEl = $("<p>").addClass("card-text").text("Wind Speed: " + forecastWindSpeed + " MPH");
+
+            forecastCard.append(forecastDateEl, forecastIconEl, forecastTempEl, forecastHumidityEl, forecastWindSpeedEl);
+            $("#forecast").append(forecastCard);
+          }
+        });
+      });
+    }
+
+    $("#search-form").on("submit", function (event) {
+      event.preventDefault();
+      clearWeatherData(); // clear the current data
+      var city = $("#cityInput").val().trim();
+      getWeatherData(city);
+    });
+  </script>
+</body>
+
+</html>
